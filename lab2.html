@@ -1,0 +1,158 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="tree.css">
+</head>
+<body>
+<a href="index.html">Lab</a>
+<h1>Lab2</h1>
+<form id="form">
+    <label for="startSymbol">Start Symbol:</label>
+    <input type="text" name="startSymbol" id="startSymbol" value="A">
+    <br>
+    <label for="minLen">Min Length:</label>
+    <input type="number" name="minLen" id="minLen" value="4">
+    <br>
+    <label for="maxLen">Max Length:</label>
+    <input type="number" name="maxLen" id="maxLen" value="10">
+    <br>
+    <label for="nonTerminals" id="nonTerminals-label">Non-Terminal Symbols:</label>
+    <input type="text" name="nonTerminals" id="nonTerminals" placeholder="A B C" value="A">
+    <br>
+    <label for="terminals" id="terminals-label">Terminal Symbols:</label>
+    <input type="text" name="terminals" id="terminals" placeholder="a b c" value="0 1">
+    <br>
+    <label for="rule" id="rules-label">Rules:</label>
+    <div id="rules-container"></div>
+    <div class="add-rule-container">
+        <input type="text" name="rule" id="rule" class="add-rule-input"
+               placeholder="nonTerminal -> production1 | production2 | ..."
+               value="A -> 01A | 10A | 00 | 11">
+        <button type="button" id="add-rule" class="btn add-rule-btn">+</button>
+    </div>
+    <br>
+    <div class="main-btns">
+        <button type="submit" id="generate" class="btn">Generate</button>
+        <button type="button" id="clear" class="btn">Clear</button>
+        <button type="button" id="show-tree" class="btn">Show Tree</button>
+    </div>
+    <p id="result"></p>
+    <div id="tree-container"></div>
+</form>
+
+
+<script src="Grammar2.js"></script>
+<script>
+  let rules = [];
+
+  // Добавление правила
+  document.getElementById('add-rule').addEventListener('click', (e) => {
+    const rule = document.getElementById('rule').value;
+    if (rule) {
+      rules.push(rule);
+      document.getElementById('rules-container').innerHTML += `<p class="rule-item">${rule}</p>`;
+      document.getElementById('rule').value = '';
+    }
+  });
+
+  // Очистка формы
+  document.getElementById('clear').addEventListener('click', (e) => {
+    // document.getElementById('form').reset();
+    document.getElementById('rules-container').innerHTML = '';
+    document.getElementById('result').textContent = ``;
+    rules = [];
+  });
+  // Функция для отображения дерева в виде HTML-списка
+  function renderTree(node) {
+    if (!node) return '';
+
+    let chosenText = node.chosenReplacement ? node.chosenReplacement : "нет";
+    let alternativesText = node.otherReplacements.length > 0 ? node.otherReplacements.join(', ') : "нет";
+
+    let html = `<ul>`;
+    html += `<li><strong>${node.value}</strong> (Выбрана: <em>${chosenText}</em>, Альтернативы: <em>${alternativesText}</em>)</li>`;
+
+    if (node.children.length > 0) {
+      node.children.forEach(child => {
+        html += renderTree(child);
+      });
+    }
+
+    html += `</ul>`;
+    return html;
+  }
+
+  let grammar; // Для хранения экземпляра Grammar
+
+  // Генерация цепочки
+  document.getElementById('generate').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('result').textContent = ``;
+    const startSymbol = document.getElementById('startSymbol').value;
+    const minLen = parseInt(document.getElementById('minLen').value);
+    const maxLen = parseInt(document.getElementById('maxLen').value);
+    const nonTerminals = document.getElementById('nonTerminals').value.trim().split(' ');
+    const terminals = document.getElementById('terminals').value.trim().split(' ');
+
+    grammar = new Grammar(); // Создание нового экземпляра Grammar
+
+    try {
+      // Добавление нетерминалов
+      nonTerminals.forEach(nt => grammar.addNonTerminal(nt));
+
+      // Добавление терминалов
+      terminals.forEach(t => grammar.addTerminal(t));
+
+      // Установка начального символа
+      grammar.setStartSymbol(startSymbol);
+
+      // Установка длины цепочки
+      grammar.setLen(minLen, maxLen);
+
+      // Добавление правил
+      rules.forEach(rule => {
+        const [nonTerminal, productions] = rule.split('->');
+        const productionList = productions.split('|').map(p => p.trim());
+        grammar.addRule(nonTerminal.trim(), productionList);
+      });
+
+      // Генерация и вывод цепочки
+      const output = document.getElementById('result');
+      output.textContent = "Generated text: " + grammar.generateChain();
+
+    } catch (error) {
+      if (error instanceof GrammarError) {
+        // Отображение ошибок грамматики пользователю
+        document.getElementById('result').textContent = `Error: ${error.message}`;
+      } else {
+        console.error('Unexpected Error:', error);
+      }
+    }
+  });
+
+  // Отображение дерева по нажатию на кнопку "Show Tree"
+  document.getElementById('show-tree').addEventListener('click', (e) => {
+    if (grammar && grammar.treeRoot) {
+      const treeContainer = document.getElementById('tree-container');
+      treeContainer.innerHTML = renderTree(grammar.treeRoot);
+    } else {
+      document.getElementById('tree-container').innerHTML = `<p>No tree to display. Generate a chain first.</p>`;
+    }
+  });
+
+  // Очистка формы и контейнера дерева
+  document.getElementById('clear').addEventListener('click', (e) => {
+    document.getElementById('rules-container').innerHTML = '';
+    document.getElementById('result').textContent = ``;
+    document.getElementById('tree-container').innerHTML = '';
+    rules = [];
+  });
+
+</script>
+</body>
+</html>

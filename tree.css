@@ -1,0 +1,22 @@
+#tree-container {
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+}
+
+#tree-container ul {
+    list-style-type: none;
+    margin-left: 20px;
+}
+
+#tree-container li {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+#tree-container li strong {
+    color: #007BFF;
+}
+
+#tree-container li em {
+    color: #FF6347;
+}
