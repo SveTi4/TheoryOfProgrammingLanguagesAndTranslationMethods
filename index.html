@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,18 +35,18 @@
     </div>
     <br>
     <div class="main-btns">
-        <button type="submit" id="generate" class="btn">Generate</button>
+        <button type="submit" id="generate" class="btn">Generate All Chains</button>
         <button type="button" id="clear" class="btn">Clear</button>
     </div>
+    <select id="chain-select" style="display:none"></select>
+    <button id="build-tree" style="display:none">Build Tree</button>
     <p id="result"></p>
 </form>
-
 
 <script src="Grammar.js"></script>
 <script>
   let rules = [];
 
-  // Добавление правила
   document.getElementById('add-rule').addEventListener('click', (e) => {
     const rule = document.getElementById('rule').value;
     if (rule) {
@@ -57,15 +56,14 @@
     }
   });
 
-  // Очистка формы
   document.getElementById('clear').addEventListener('click', (e) => {
-    // document.getElementById('form').reset();
     document.getElementById('rules-container').innerHTML = '';
     document.getElementById('result').textContent = ``;
+    document.getElementById('chain-select').style.display = 'none';
+    document.getElementById('build-tree').style.display = 'none';
     rules = [];
   });
 
-  // Генерация цепочки
   document.getElementById('generate').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('result').textContent = ``;
@@ -78,37 +76,43 @@
     const grammar = new Grammar();
 
     try {
-      // Добавление нетерминалов
       nonTerminals.forEach(nt => grammar.addNonTerminal(nt));
-
-      // Добавление терминалов
       terminals.forEach(t => grammar.addTerminal(t));
-
-      // Установка начального символа
       grammar.setStartSymbol(startSymbol);
-
-      // Установка длины цепочки
       grammar.setLen(minLen, maxLen);
 
-      // Добавление правил
       rules.forEach(rule => {
         const [nonTerminal, productions] = rule.split('->');
         const productionList = productions.split('|').map(p => p.trim());
         grammar.addRule(nonTerminal.trim(), productionList);
       });
 
-      // Генерация и вывод цепочки
-      const output = document.getElementById('result');
-      output.textContent = "Generated text: " + grammar.generateChain();
+      const chains = grammar.generateAllChains();
+      console.log(chains);
+      const select = document.getElementById('chain-select');
+      select.innerHTML = '';
+      chains.forEach(chain => {
+        const option = document.createElement('option');
+        option.value = chain;
+        option.textContent = chain;
+        select.appendChild(option);
+      });
 
+      select.style.display = 'block';
+      document.getElementById('build-tree').style.display = 'block';
     } catch (error) {
       if (error instanceof GrammarError) {
-        // Отображение ошибок грамматики пользователю
         document.getElementById('result').textContent = `Error: ${error.message}`;
       } else {
         console.error('Unexpected Error:', error);
       }
     }
+  });
+
+  document.getElementById('build-tree').addEventListener('click', () => {
+    const selectedChain = document.getElementById('chain-select').value;
+    // Логика для построения дерева на основе выбранной цепочки
+    document.getElementById('result').textContent = `Selected Chain: ${selectedChain}`;
   });
 </script>
 </body>
