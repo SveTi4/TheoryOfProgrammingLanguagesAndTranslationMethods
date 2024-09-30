@@ -6,6 +6,7 @@ class Grammar {
     this.startSymbol = '';
     this.minLen = 0;
     this.maxLen = 20;
+    this.chainHistories = {};  // Сохраняем историю для каждой цепочки
   }
 
   setLen(min, max) {
@@ -23,19 +24,14 @@ class Grammar {
 
   addRule(nonTerminal, productions) {
     if (!this.nonTerminals.has(nonTerminal)) {
-      throw new GrammarError('Non-terminal character must be contained in non-terminal characters');
+      throw new Error('Non-terminal character must be contained in non-terminal characters');
     }
-
-    if (!this.validateRule(nonTerminal, productions)) {
-      throw new GrammarError('Invalid rule detected');
-    }
-
     this.rules.set(nonTerminal, new Set(productions));
   }
 
   setStartSymbol(symbol) {
     if (!this.nonTerminals.has(symbol)) {
-      throw new GrammarError('Starting character must be contained in non-terminal characters');
+      throw new Error('Starting character must be contained in non-terminal characters');
     }
     this.startSymbol = symbol;
   }
@@ -47,29 +43,36 @@ class Grammar {
     this.startSymbol = '';
     this.minLen = 0;
     this.maxLen = 20;
+    this.chainHistories = {};
   }
 
   generateAllChains() {
     let chains = new Set();
-    let queue = [this.startSymbol];
+    let queue = [{ chain: this.startSymbol, history: [] }];
 
     while (queue.length) {
-      const current = queue.shift();
+      const { chain, history } = queue.shift();
 
       // Проверяем, что текущая цепочка не содержит нетерминалов
-      if (current.split('').every(char => this.terminals.has(char))) {
-        if (current.length >= this.minLen && current.length <= this.maxLen) {
-          chains.add(current);
+      if (chain.split('').every(char => this.terminals.has(char))) {
+        if (chain.length >= this.minLen && chain.length <= this.maxLen) {
+          chains.add(chain);
+          this.chainHistories[chain] = history;  // Сохраняем историю для этой цепочки
         }
       }
 
-      if (current.length < this.maxLen) {
-        for (let i = 0; i < current.length; i++) {
-          if (this.nonTerminals.has(current[i])) {
-            const replacements = Array.from(this.rules.get(current[i]));
+      if (chain.length < this.maxLen) {
+        for (let i = 0; i < chain.length; i++) {
+          if (this.nonTerminals.has(chain[i])) {
+            const replacements = Array.from(this.rules.get(chain[i]));
             replacements.forEach(replacement => {
-              const newChain = current.slice(0, i) + replacement + current.slice(i + 1);
-              queue.push(newChain);
+              const newChain = chain.slice(0, i) + replacement + chain.slice(i + 1);
+              const newHistory = [...history, {
+                nonTerminal: chain[i],
+                chosen: replacement,
+                alternatives: replacements.filter(r => r !== replacement)
+              }];
+              queue.push({ chain: newChain, history: newHistory });
             });
           }
         }
@@ -79,20 +82,7 @@ class Grammar {
     return Array.from(chains).filter(chain => chain.length >= this.minLen && chain.length <= this.maxLen);
   }
 
-  validateRule(nonTerminal, productions) {
-    for (const production of productions) {
-      if (production === nonTerminal) {
-        throw new GrammarError(`Direct recursion detected in rule: ${nonTerminal} -> ${production}`);
-      }
-
-      const symbols = production.split('');
-      const nonTerminalCount = symbols.filter(c => this.nonTerminals.has(c)).length;
-      const terminalCount = symbols.filter(c => this.terminals.has(c)).length;
-
-      if (nonTerminalCount > 0 && terminalCount === 0) {
-        throw new GrammarError(`Production contains only non-terminals: ${nonTerminal} -> ${production}`);
-      }
-    }
-    return true;
+  getHistory(chain) {
+    return this.chainHistories[chain];
   }
 }
