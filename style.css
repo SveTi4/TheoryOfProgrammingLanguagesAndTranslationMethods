@@ -102,3 +102,8 @@ input[type="text"], input[type="number"] {
 #tree svg {
     width: 100%;
 }
+#output {
+    width: 100vw;
+    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 50%);
+}
