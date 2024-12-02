@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DPDA Chain Validation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>DPDA Chain Validation</h1>
+    <p><a href="index.html">Lab1-2</a></p>
+    <form id="dpdaForm">
+        <label for="chain">Chain:</label>
+        <input type="text" id="chain" value="aabbaa" placeholder="Enter chain" required>
+        <br>
+        <label for="startState">Start State:</label>
+        <input type="text" id="startState" value="q0" placeholder="Enter start state" required>
+        <br>
+        <label for="finalStates">Final States (comma-separated):</label>
+        <input type="text" id="finalStates" value="q2" placeholder="Enter final states" required>
+        <br>
+        <label for="validSymbols">Valid Symbols (comma-separated):</label>
+        <input type="text" id="validSymbols" value="a,b" placeholder="Enter valid symbols" required>
+        <br>
+        <label for="transitions">Transition Rules:</label>
+        <input type="text" id="transitions"
+               value="q0,a,Z=q0,push(aZ); q0,b,Z=q0,push(bZ); q0,a,a=q1,pop; q0,a,b=q0,push(ab); q0,b,a=q0,push(ba); q0,b,b=q1,pop; q1,a,a=q1,pop; q1,b,b=q1,pop; q1,ε,Z=q2,nop"
+               placeholder="Enter transitions" required>
+        <br>
+        <label for="initialStackSymbol">Initial Stack Symbol:</label>
+        <input type="text" id="initialStackSymbol" value="Z" placeholder="Enter initial stack symbol" required>
+        <br>
+        <div class="main-btns">
+            <button type="button" class="btn" onclick="validateChain()">Validate</button>
+            <button type="button" class="btn" onclick="clearForm()">Clear</button>
+        </div>
+    </form>
+
+    <br><br>
+    <div class="output" id="output" style="display: none"></div>
+</div>
+
+<script>
+  function validateChain() {
+    const output = document.getElementById('output');
+    output.innerHTML = ''; // Clear previous output
+
+    // Get form values
+    const chain = document.getElementById('chain').value.trim();
+    const startState = document.getElementById('startState').value.trim();
+    const finalStates = document.getElementById('finalStates').value.split(',').map(s => s.trim());
+    const validSymbols = document.getElementById('validSymbols').value.split(',').map(s => s.trim());
+    const transitionsInput = document.getElementById('transitions').value.split(';').map(s => s.trim());
+    const initialStackSymbol = document.getElementById('initialStackSymbol').value.trim();
+
+    // Form transition rules
+    const dpda = {};
+    transitionsInput.forEach(rule => {
+      const [fromPart, toPart] = rule.split('=').map(s => s.trim());
+      const [state, symbol, stackTop] = fromPart.split(',').map(s => s.trim());
+      const [newState, stackAction] = toPart.split(',').map(s => s.trim());
+
+      if (!dpda[state]) dpda[state] = {};
+      if (!dpda[state][symbol]) dpda[state][symbol] = {};
+      dpda[state][symbol][stackTop] = { newState, stackAction };
+    });
+
+    // Initialize stack and state
+    let stack = [initialStackSymbol];
+    let currentState = startState;
+    appendOutput(`Start State: ${currentState}, Initial Stack: ${stack.join('')}`);
+
+    for (let i = 0; i <= chain.length;) {
+      if (i === chain.length) {
+        // Process epsilon transitions after reading the entire chain
+        currentState = processEpsilonTransitions(dpda, currentState, stack, appendOutput);
+        break;
+      }
+
+      const symbol = chain[i];
+      appendOutput(`Symbol: ${symbol} -> Current State: ${currentState}, Stack: ${stack.join('')}`);
+
+      // Check for invalid symbols
+      if (!validSymbols.includes(symbol)) {
+        appendOutput(`Error: Invalid symbol '${symbol}' in chain`);
+        return;
+      }
+
+      const stackTop = stack.length > 0 ? stack[stack.length - 1] : undefined;
+      let transition = dpda[currentState] && dpda[currentState][symbol] && dpda[currentState][symbol][stackTop];
+
+      if (!transition) {
+        appendOutput(`Error: No transition exists for symbol '${symbol}' with stack top '${stackTop}'`);
+        return;
+      }
+
+      // Perform transition and stack action
+      currentState = transition.newState;
+      performStackAction(transition.stackAction, stack, appendOutput, currentState);
+
+      // Move to the next symbol
+      i++;
+    }
+
+    // Process epsilon transitions after consuming all input symbols
+    currentState = processEpsilonTransitions(dpda, currentState, stack, appendOutput);
+
+    // Check if the final state is accepting
+    if (finalStates.includes(currentState)) {
+      appendOutput(`Final State: ${currentState}, Stack: ${stack.join('')}`);
+      appendOutput('The chain is valid');
+    } else {
+      appendOutput(`Final State: ${currentState}, Stack: ${stack.join('')}`);
+      appendOutput('Error: Chain ended in a non-final state');
+    }
+  }
+
+  function processEpsilonTransitions(dpda, currentState, stack, appendOutput) {
+    let epsilonAvailable = true;
+    while (epsilonAvailable) {
+      epsilonAvailable = false;
+      const stackTop = stack.length > 0 ? stack[stack.length - 1] : undefined;
+      const transition = dpda[currentState] && dpda[currentState]['ε'] && dpda[currentState]['ε'][stackTop];
+      if (transition) {
+        currentState = transition.newState;
+        performStackAction(transition.stackAction, stack, appendOutput, currentState);
+        epsilonAvailable = true;
+      }
+    }
+    return currentState;
+  }
+
+  function performStackAction(stackAction, stack, appendOutput, currentState) {
+    if (stackAction.startsWith('push')) {
+      const symbols = stackAction.slice(5, -1);
+      // Replace the top of the stack with new symbols
+      stack.pop(); // Remove the top symbol
+      // Push new symbols in reverse order
+      for (let i = symbols.length - 1; i >= 0; i--) {
+        stack.push(symbols[i]);
+      }
+      appendOutput(`Transition to State: ${currentState}, Action: push(${symbols}), Stack: ${stack.join('')}`);
+    } else if (stackAction === 'pop') {
+      stack.pop();
+      appendOutput(`Transition to State: ${currentState}, Action: pop, Stack: ${stack.join('')}`);
+    } else if (stackAction === 'nop') {
+      appendOutput(`Transition to State: ${currentState}, Action: nop, Stack: ${stack.join('')}`);
+    } else {
+      appendOutput(`Error: Unknown stack action '${stackAction}'`);
+    }
+  }
+
+  function appendOutput(message) {
+    const output = document.getElementById('output');
+    output.style.display = 'block';
+    output.innerHTML += `${message}<br>`;
+  }
+
+  function clearForm() {
+    document.getElementById('dpdaForm').reset();
+    const output = document.getElementById('output');
+    output.style.display = 'none';
+    output.innerHTML = '';
+  }
+</script>
+
+</body>
+</html>
