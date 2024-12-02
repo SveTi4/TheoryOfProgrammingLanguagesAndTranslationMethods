@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFA Chain Validation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>DFA Chain Validation</h1>
+    <p><a href="index.html">Lab1-2</a></p>
+    <p><a href="lab4.html">Lab4</a></p>
+    <form id="dfaForm">
+        <label for="chain">Chain:</label>
+        <input type="text" id="chain" value="10101" placeholder="Enter chain (e.g., 10101)" required>
+        <br>
+        <label for="startState">Start State:</label>
+        <input type="text" id="startState" value="p" placeholder="Enter start state (e.g., p)" required>
+        <br>
+        <label for="finalStates">Final States (comma-separated):</label>
+        <input type="text" id="finalStates" value="r" placeholder="Enter final states (e.g., r)" required>
+        <br>
+        <label for="validSymbols">Valid Symbols (comma-separated):</label>
+        <input type="text" id="validSymbols" value="0,1" placeholder="Enter valid symbols (e.g., 0,1)" required>
+        <br>
+        <label for="transitions">Transition Rules (format: p,0=q; p,1=p):</label>
+        <input type="text" id="transitions" value="p,0=q; p,1=p; q,0=r; q,1=p; r,0=r; r,1=r"
+               placeholder="Enter transitions (e.g., p,0=q; p,1=p)" required>
+        <br>
+        <div class="main-btns">
+            <button type="button" class="btn" onclick="validateChain()">Validate</button>
+            <button type="button" class="btn" onclick="clearForm()">Clear</button>
+        </div>
+    </form>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="output" id="output" style="display: none"></div>
+</div>
+
+<script>
+  function validateChain() {
+    const output = document.getElementById('output');
+    output.innerHTML = ''; // Clear previous output
+
+    // Get form values
+    const chain = document.getElementById('chain').value.trim();
+    const startState = document.getElementById('startState').value.trim();
+    const finalStates = document.getElementById('finalStates').value.split(',').map(s => s.trim());
+    const validSymbols = document.getElementById('validSymbols').value.split(',').map(s => s.trim());
+    const transitionsInput = document.getElementById('transitions').value.split(';').map(s => s.trim());
+
+    // Form transition rules
+    const dfa = {};
+    transitionsInput.forEach(rule => {
+      const [fromState, condition] = rule.split('=').map(s => s.trim());
+      const [state, symbol] = fromState.split(',').map(s => s.trim());
+
+      if (!dfa[state]) {
+        dfa[state] = {};
+      }
+      dfa[state][symbol] = condition;
+    });
+
+    // Validate chain
+    let currentState = startState;
+    appendOutput(`Start State: ${currentState}`);
+
+    for (const symbol of chain) {
+      appendOutput(`Symbol: ${symbol} -> Current State: ${currentState}`);
+
+      // Check for invalid symbols
+      if (!validSymbols.includes(symbol)) {
+        appendOutput(`Error: Invalid symbol '${symbol}' in chain`);
+        return;
+      }
+
+      // Transition to next state
+      currentState = dfa[currentState] ? dfa[currentState][symbol] : undefined;
+
+      // Check for nonexistent transitions
+      if (!currentState) {
+        appendOutput(`Error: No transition exists for symbol '${symbol}'`);
+        return;
+      }
+
+      appendOutput(`Transition to State: ${currentState}`);
+    }
+
+    // Check if the final state is one of the final states
+    if (finalStates.includes(currentState)) {
+      appendOutput(`Final State: ${currentState}`);
+      appendOutput('The chain is valid');
+    } else {
+      appendOutput(`Final State: ${currentState}`);
+      appendOutput('Error: Chain ended in a non-final state');
+    }
+  }
+
+  function appendOutput(message) {
+    const output = document.getElementById('output');
+    output.style.display = 'block';
+    output.innerHTML += `${message}<br>`;
+  }
+
+  function clearForm() {
+    document.getElementById('dfaForm').reset();
+    const output = document.getElementById('output');
+    output.style.display = 'none';
+    output.innerHTML = '';
+  }
+</script>
+
+</body>
+</html>

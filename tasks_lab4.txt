@@ -1,0 +1,103 @@
+22.3 a^(n+1)b^(2n)c^(2k+1)
+
+q0,a,Z=q1,nop;
+q1,a,Z=q1,push(aZ);
+q1,a,a=q1,push(aa);
+q1,b,a=q2,nop;
+q2,b,a=q3,pop;
+q3,b,a=q2,nop;
+q3,c,a=q3,pop; // Добавленный переход
+q3,c,Z=q4,nop;
+q4,c,Z=q5,nop;
+q5,c,Z=q5,nop; // Добавленный переход для чтения оставшихся 'c'
+q5,ε,Z=qf,nop
+
+q0,a,Z=q1,nop; q1,a,Z=q1,push(aZ); q1,a,a=q1,push(aa); q1,b,a=q2,nop; q2,b,a=q3,pop; q3,b,a=q2,nop; q3,c,a=q3,pop; q3,c,Z=q4,nop; q4,c,Z=q5,nop; q5,c,Z=q5,nop; q5,ε,Z=qf,nop
+
+q0,a,Z=q1,push(Z);
+q1,a,Z=q1,push(aZ);
+q1,a,a=q1,push(aa);
+q1,b,a=q2,nop;
+q2,b,a=q3,pop;
+q3,b,a=q2,nop;
+q3,c,Z=q4,nop;
+q4,c,Z=q4,nop;
+q4,ε,Z=qf,pop
+
+q0,a,Z=q1,push(Z); q1,a,Z=q1,push(aZ); q1,a,a=q1,push(aa); q1,b,a=q2,nop; q2,b,a=q3,pop; q3,b,a=q2,nop; q3,c,Z=q4,nop; q4,c,Z=q4,nop; q4,ε,Z=qf,pop
+
+aaabbbbccc
+1. aabbbbccc - Z
+2. abbbbccc - aZ
+3. bbbbccc - aaZ
+4. bbbccc - aaZ
+5. bbccc - aZ
+6. bccc - aZ
+7. ccc - Z
+8. c - Z
+9. - Z
+Хуйня какая-то получается
+
+
+
+q0,a,Z=q0,push(aZ);
+q0,a,a=q0,push(aa);
+q0,b,a=q1,nop;
+q1,b,a=q1,nop;
+q1,c,a=q2,nop;
+q2,c,a=q3,nop;
+q3,c,a=q2,pop;
+q2,ε,Z=qf,nop
+
+q0,a,Z=q0,push(aZ); q0,a,a=q0,push(aa); q0,b,a=q1,nop; q1,b,a=q1,nop; q1,c,a=q2,nop; q2,c,a=q3,nop; q3,c,a=q2,pop; q2,ε,Z=qf,nop
+
+q0,a,Z=q0,push(aZ);
+q0,a,a=q0,push(aa);
+q0,b,a=q1,pop;
+q1,b,a=q1,pop;
+q1,c,a=q2,pop;
+q1,c,Z=q2,nop;
+q2,c,a=q3,pop;
+q2,c,Z=q3,nop;
+q3,c,a=q2,pop;
+q3,c,Z=q2,nop;
+q2,ε,Z=qf,nop;
+
+q0,a,Z=q0,push(aZ); q0,a,a=q0,push(aa); q0,b,a=q1,pop; q1,b,a=q1,pop; q1,c,a=q2,pop; q1,c,Z=q2,nop; q2,c,a=q3,pop; q2,c,Z=q3,nop; q3,c,a=q2,pop; q3,c,Z=q2,nop; q2,ε,Z=qf,nop
+
+
+q0,a,Z=q1,nop;
+q1,a,Z=q2,push(aZ);
+q1,a,a=q2,push(aa);
+q2,a,a=q1,nop;
+q2,b,a=q2,nop;
+q2,c,a=q4,nop;
+q4,c,a=q5,nop;
+q5,c,a=q4,pop;
+q4,ε,Z=qf,nop
+
+q0,a,Z=q1,nop; q1,a,Z=q2,push(aZ); q1,a,a=q2,push(aa); q2,a,a=q1,nop; q2,b,a=q2,nop; q2,c,a=q4,nop; q4,c,a=q5,nop; q5,c,a=q4,pop; q4,ε,Z=qf,nop
+
+
+
+
+q0,a,Z=q1,nop, 0;
+q1,a,Z=q2,push(aZ), 0;
+q1,a,a=q2,push(aa), 0;
+q2,a,a=q1,nop, 0;
+q2,b,a=q2,nop, L;
+q2,c,a=q4,nop, L;
+q4,c,a=q5,nop, L;
+q5,c,a=q4,pop, 11;
+q4,L,Z=qf,nop, L;
+
+
+q0,0,Z=q0,push(0Z),00;
+q0,0,0=q0,push(00),00;
+q0,1,0=q1,nop,L;
+q1,1,0=q2,nop,L;
+q2,1,0=q1,pop,1;
+q1,L,Z=qf,nop, L
+
+q0,0,Z=q0,push(0Z),00; q0,0,0=q0,push(00),00; q0,1,0=q1,nop,L; q1,1,0=q2,nop,L; q2,1,0=q1,pop,1; q1,L,Z=qf,nop, L
+

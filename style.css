@@ -2,25 +2,37 @@
     font-family: fnt;
     src: url("/Users/glitch/Documents/7s/tpl/font/fnt.ttf");
 }
+
+* {
+    user-select: none;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 h1 {
     text-align: center;
 }
 h1, label, .btn{
     font-family: fnt;
 }
-body {
+
+html {
     width: 100vw;
     height: 100vh;
     background-image: url("./img/bg.webp");
     background-repeat: no-repeat;
     background-size: auto;
-
 }
-* {
-    user-select: none;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+
+body {
+    width: 100%;
+    max-height: 100%;
+}
+.container {
+    width: 100%;
+    max-height: 100vh;
+    overflow: auto;
 }
 .rule-item {
     user-select: text;
@@ -34,6 +46,8 @@ form {
     padding: 20px;
     background: rgba(255, 255, 255, 50%);
     backdrop-filter: blur(5px);
+    max-height: 90vh;
+    overflow: scroll;
 }
 label {
     margin-bottom: 8px;
@@ -78,4 +92,18 @@ input[type="text"], input[type="number"] {
 
 #result {
     text-align: center;
+}
+
+#tree {
+    width: 100vw;
+    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 50%);
+}
+#tree svg {
+    width: 100%;
+}
+#output {
+    width: 100vw;
+    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 50%);
 }
